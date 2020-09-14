@@ -7,7 +7,7 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <a href="{{route('question.create')}}" class="btn btn-primary float-right">Create question</a>
+        <a href="{{route('dashboard.question.create')}}" class="btn btn-primary float-right">Create question</a>
         <h4>Questions</h4>
     </div>
     <div class="card-body">
@@ -28,10 +28,10 @@
                     <td>{{$question->survey->title}}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{{route('question.edit', $question->id)}}" class="btn btn-sm btn-success">
+                            <a href="{{route('dashboard.question.edit', $question->id)}}" class="btn btn-sm btn-success">
                                 Edit
                             </a>
-                            <form action="{{route('question.destroy', $question->id)}}" method="POST" class="d-none">
+                            <form action="{{route('dashboard.question.destroy', $question->id)}}" method="POST" class="d-none">
                                 @csrf
                                 @method('delete')
                             </form>

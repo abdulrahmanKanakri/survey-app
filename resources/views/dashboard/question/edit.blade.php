@@ -10,7 +10,7 @@
             <h4>Edit question</h4>
         </div>
         <div class="card-body">
-            <form action="{{route('question.update', $question->id)}}" method="POST">
+            <form action="{{route('dashboard.question.update', $question->id)}}" method="POST">
                 @csrf
                 @method('put')
                 <div class="row">

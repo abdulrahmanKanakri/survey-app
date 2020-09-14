@@ -2,22 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
+use App\Http\Controllers\Controller;
+use App\Requests\UserRequest;
+use App\Repositories\Role\IRoleRepository;
+use App\Repositories\User\IUserRepository;
 
 class UserController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('permission:edit users', ['only' => ['edit', 'update']]);
-    //     $this->middleware('permission:create users', ['only' => ['create', 'store']]);
-    //     $this->middleware('permission:delete users', ['only' => ['destroy']]);
-    //     $this->middleware('permission:show users', ['only' => ['index']]);
-    // }
-
     private $dir = 'dashboard.user.';
+    private $route = 'dashboard.user.';
+    private $userRepo;
+    private $roleRepo;
     
+    public function __construct(
+        IUserRepository $userRepo, 
+        IRoleRepository $roleRepo
+    ) {
+        $this->userRepo = $userRepo;
+        $this->roleRepo = $roleRepo;
+        $this->permissions();
+    }
+    
+    private function permissions() {
+        $this->middleware('permission:user-list', ['only' => ['index']]);
+        $this->middleware('permission:user-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:user-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:user-delete', ['only' => ['destroy']]);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -25,7 +38,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::with('roles')->get();
+        $users = $this->userRepo->getUsers();
         return view($this->dir . 'index', compact('users'));
     }
 
@@ -36,7 +49,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all();
+        $roles = $this->roleRepo->getRoles();
         return view($this->dir . 'create', compact('roles'));
     }
 
@@ -46,18 +59,13 @@ class UserController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        $request->validate($this->rules());
-
-        $user = new User;
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->password = \Hash::make($request->password);
-        $user->save();
-        $user->assignRole($request->role);
-
-        return redirect()->route('user.index')->with('success', 'Successfully created');
+        $this->userRepo->create($request->all());
+        return redirect()->route($this->route . 'index')->with('status', [
+            'type' => 'success', 
+            'msg' => 'Successfully created'
+        ]);
     }
 
     /**
@@ -79,8 +87,8 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::with('roles')->find($id);
-        $roles = Role::all();
+        $user = $this->userRepo->getUserById($id);
+        $roles = $this->roleRepo->getRoles();
         return view($this->dir . 'edit', compact('roles', 'user'));
     }
 
@@ -91,22 +99,13 @@ class UserController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UserRequest $request, $id)
     {
-        $request->validate($this->rules(true));
-
-        $user = User::find($id);
-        $user->name = $request->name;
-        if($user->email != $request->email) {
-            $user->email = $request->email;
-        }
-        if($request->password) {
-            $user->password = \Hash::make($request->password);
-        }
-        $user->save();
-        $user->syncRoles([$request->role]);
-
-        return redirect()->route('user.index')->with('success', 'Successfully updated');
+        $this->userRepo->update($request->all(), $id);
+        return redirect()->route($this->route . 'index')->with('status', [
+            'type' => 'success', 
+            'msg' => 'Successfully updated'
+        ]);
     }
 
     /**
@@ -117,20 +116,10 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        User::find($id)->delete();
-        return redirect()->route('user.index')->with('success', 'Successfully deleted');
-    }
-
-    private function rules($edit = false) {
-        return [
-            'name' => 'required',
-            'email' => [
-                'required',
-                'email',
-                !$edit ? 'unique:users,email' : ''
-            ],
-            'password' => !$edit ? 'required' : '',
-            'role' => 'required',
-        ];
+        $this->userRepo->delete($id);
+        return redirect()->route($this->route . 'index')->with('status', [
+            'type' => 'success', 
+            'msg' => 'Successfully deleted'
+        ]);
     }
 }

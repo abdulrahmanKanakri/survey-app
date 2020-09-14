@@ -2,15 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Answer;
-use App\Models\Question;
 use App\Models\Survey;
+use App\Models\SurveyUser;
+use App\Models\UserAnswers;
+use App\Repositories\Survey\ISurveyRepository;
+use App\Repositories\User\IUserRepository;
+use App\Requests\SurveyRequest;
+use App\Services\SurveyService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class SurveyController extends Controller
 {
     private $dir = 'dashboard.survey.';
+    private $surveyRepo;
+    private $userRepo;
+    private $surveyService;
+
+    public function __construct(
+        ISurveyRepository $surveyRepo, 
+        IUserRepository $userRepo,
+        SurveyService $surveyService
+    ) {
+        $this->surveyRepo = $surveyRepo;
+        $this->userRepo = $userRepo;
+        $this->surveyService = $surveyService;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -18,7 +35,7 @@ class SurveyController extends Controller
      */
     public function index()
     {
-        $surveys = Survey::with('questions')->paginate(10);
+        $surveys = $this->surveyRepo->getSurveys(15);
         return view($this->dir . 'index', compact('surveys'));
     }
 
@@ -29,7 +46,8 @@ class SurveyController extends Controller
      */
     public function create()
     {
-        return view($this->dir . 'create');
+        $types = Survey::TYPES;
+        return view($this->dir . 'create', compact('types'));
     }
 
     /**
@@ -38,16 +56,10 @@ class SurveyController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(SurveyRequest $request)
     {
-        $request->validate($this->rules());
-
-        $survey = new Survey;
-        $survey->title = $request->title;
-        $survey->description = $request->description;
-        $survey->save();
-
-        return redirect()->route('survey.show', $survey->id)->with('status', [
+        $survey = $this->surveyRepo->create($request->all());
+        return redirect()->route($this->dir . 'show', $survey->id)->with('status', [
             'type' => 'success',
             'msg' => 'Successfully created'
         ]);
@@ -61,7 +73,7 @@ class SurveyController extends Controller
      */
     public function show($id)
     {
-        $survey = Survey::with('questions.answers')->find($id);
+        $survey = $this->surveyRepo->getSurveyById($id);
         return view($this->dir . 'show', compact('survey'));
     }
 
@@ -73,8 +85,9 @@ class SurveyController extends Controller
      */
     public function edit($id)
     {
-        $survey = Survey::find($id);
-        return view($this->dir . 'edit', compact('survey'));
+        $types = Survey::TYPES;
+        $survey = $this->surveyRepo->getSurveyById($id);
+        return view($this->dir . 'edit', compact('survey', 'types'));
     }
 
     /**
@@ -84,16 +97,10 @@ class SurveyController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        $request->validate($this->rules());
-        
-        $survey = Survey::find($id);
-        $survey->title = $request->title;
-        $survey->description = $request->description;
-        $survey->save();
-
-        return redirect()->route('survey.index')->with('status', [
+    public function update(SurveyRequest $request, $id)
+    {        
+        $this->surveyRepo->update($request->all(), $id);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully updated'
         ]);
@@ -107,45 +114,23 @@ class SurveyController extends Controller
      */
     public function destroy($id)
     {
-        Survey::find($id)->delete();
-        return redirect()->route('survey.index')->with('status', [
+        $this->surveyRepo->delete($id);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully deleted'
         ]);
     }
 
-    private function rules()
-    {
-        return [
-            'title' => 'required|string|max:255',
-            'description' => 'required'
-        ];
+    public function assignToUsersPage(Survey $survey) {
+        $users = $this->surveyService->getNotAssignedUsers($survey);
+        return view($this->dir . 'assign', compact('survey', 'users'));
     }
 
-    public function createQuestion($id)
-    {
-        $survey = Survey::find($id);
-        return view($this->dir . 'question-create', compact('survey'));
-    }
-
-    public function storeQuestion(Request $request, $id)
-    {
-        $question = new Question;
-        $question->title = $request->question_title;
-        $question->survey_id = $id;
-        $question->save();
-
-        foreach($request->answers as $_answer) {
-            $answer = new Answer;
-            $answer->body = $_answer['body'];
-            $answer->type = $_answer['type'];
-            $answer->question_id = $question->id;
-            $answer->save();
-        }
-
-        return redirect()->route('survey.show', $id)->with('status', [
+    public function assignToUsers(Request $request, Survey $survey) {
+        $this->surveyService->assignToUsers($survey, $request->users);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
-            'msg' => 'Successfully created'
+            'msg' => 'Successfully deleted'
         ]);
     }
 }

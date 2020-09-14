@@ -6,78 +6,141 @@
 
 @push('styles')
 <style>
-    p.desc {
-        border: 1px solid #cecece;
-        padding: 8px;
-        border-radius: 4px;
-        background-color: #f8f8f8;
-
-    }
-    span.question_title {
-        font-size: 18px;
-    }
+.question-type, 
+.based-on {
+    font-size: 14px; 
+}
+.required {
+    color: red;
+    margin-right: 2px
+}
 </style>
 @endpush
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <a href="{{route('survey.question.create', $survey->id)}}" class="btn btn-primary float-right">
-            Create new question
+        @if ($survey->type == 'private')
+            <a href="{{route('dashboard.survey.assignPage', $survey->id)}}" 
+                class="btn btn-sm btn-info float-right ml-1">
+                <span class="mr-1">Assign to users</span>
+                <i class="fa fa-users"></i>
+            </a>
+        @endif
+        <button class="btn btn-sm btn-secondary float-right ml-1" 
+            title="get link"
+            onclick="showAlert(
+                'Share this link', 
+                '{{url('') . '/startSurvey/' . $survey->uuid}}',
+                'info'
+            )">
+            <i class="fa fa-link"></i>
+        </button>
+        <a 
+            href="{{route('dashboard.response.exportSurvey', [$survey->id])}}" 
+            class="btn btn-sm btn-success float-right"
+            >Export to excel
         </a>
-        <h2>{{$survey->title}}</h2>
+        <h3>Survey: {{$survey->title}}</h3>
+        <span class="badge badge-{{$survey->getColor()}}">
+            {{$survey->type}}
+        </span>
     </div>
     <div class="card-body">
         <div>
-            <h4 class="mb-3">Description:</h4>
-            <p class="desc">
+            <h5 class="mb-3">Description:</h5>
+            <p class="desc mb-0">
                 {{$survey->description}}
             </p>
         </div>
-        <hr>
-        <div>
-            <h4 class="mb-3">Questions:</h4>
-            @if ($survey->questions->count() > 0)
-                @foreach ($survey->questions as $_key => $question)
-                    <div class="card">
-                        <div class="card-header">
-                            <span class="question_title">
-                                {{$question->title}}
-                            </span>
-                        </div>
-                        <div class="card-body">
-                            @foreach ($question->answers as $key => $answer)
-                                @if ($answer->type == 'checkbox' || $answer->type == 'radio')
-                                <div>
-                                    <input type="{{$answer->type}}" id="answer_{{$_key.'_'.$key}}">
-                                    <label for="answer_{{$_key.'_'.$key}}">{{$answer->body}}</label>
-                                </div>
-                                @endif
-
-                                @if ($answer->type == 'text')
-                                <div class="form-group">
-                                    <label for="answer_{{$_key.'_'.$key}}">{{$answer->body}}</label>
-                                    <input type="text" id="answer_{{$_key.'_'.$key}}" class="form-control" disabled placeholder="Free text">
-                                </div>
-                                @endif
-
-                                @if ($answer->type == 'textarea')
-                                <div class="form-group">
-                                    <label for="answer_{{$_key.'_'.$key}}">{{$answer->body}}</label>
-                                    <textarea rows="5" id="answer_{{$_key.'_'.$key}}" class="form-control" disabled placeholder="Free text"></textarea>
-                                </div>
-                                @endif
-                            @endforeach
+    </div>
+    <div class="card-footer">
+        <small>Publish date: {{$survey->getPublishDate()}}</small>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header">
+        <a href="{{route('dashboard.survey.question.create', $survey->id)}}" 
+            class="btn btn-primary btn-sm float-right">
+            Create new question
+        </a>
+        <span style="font-size: 18px">Questions</span>
+    </div>
+    <div class="card-body">
+        @if ($survey->questions->count() > 0)
+            @foreach ($survey->questions as $question)
+                @if ($loop->index != 0) <hr> @endif
+                <div class="d-flex justify-content-between">
+                    <div class="d-flex">
+                        @if ($question->required == 1)
+                            <span class="required">*</span>
+                        @endif
+                        <div class="details">
+                            <div class="question-title">
+                                Question #{{$loop->index + 1}}: {{$question->title}} 
+                            </div>
+                            <div class="question-type">Type: {{$question->type}}</div>
+                            @if ($question->dependent_question_id)
+                            <div class="based-on">
+                                Based on 
+                                question: {{$question->dependentQuestion->title}} 
+                                and 
+                                answer: {{$question->dependentAnswer->body}}
+                            </div>
+                            @endif
                         </div>
                     </div>
-                @endforeach
-            @else
-                <span>There's no questions yet, </span>
-                <a href="{{route('survey.question.create', $survey->id)}}">
-                    Create new one.
-                </a>
-            @endif
+                    <div>
+                        <a href="{{route('dashboard.survey.question.edit', [$survey->id, $question->id])}}" class="edit mr-1">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <form action="{{route('dashboard.survey.question.destroy', [$survey->id, $question->id])}}" 
+                            method="POST" class="d-none">
+                            @csrf
+                            @method('delete')
+                        </form>
+                        <a href="javascript:void(0)" onclick="deleteAlert(this)" class="trash">
+                            <i class="fa fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    @if ($question->answers->count() > 0)
+                        @foreach ($question->answers as $answer)
+                        <div class="col-md-6">
+                            @if ($question->type == 'textarea')
+                                <label>{{$answer->body}}</label>
+                                <textarea class="form-control" rows="5"></textarea>
+                            @else
+                                @if ($question->type == 'radio' || $question->type == 'checkbox')
+                                    <input type="{{$question->type}}">
+                                    <label class="ml-1">{{$answer->body}}</label>
+                                @else
+                                    <label>{{$answer->body}}</label>
+                                    <input type="{{$question->type}}" class="form-control">
+                                @endif
+                            @endif
+                        </div>
+                        @endforeach
+                    @else
+                        <div class="col-md-6">
+                            @if ($question->type == 'textarea')
+                                <textarea class="form-control"></textarea>
+                            @else
+                                <input type="{{$question->type}}" class="form-control">
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        @else
+        <div style="font-size: 14px">
+            There's no questions yet, 
+            <a href="{{route('dashboard.survey.question.create', $survey->id)}}">
+                create the first one?
+            </a>
         </div>
+        @endif
     </div>
 </div>
 @endsection

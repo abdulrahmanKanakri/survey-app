@@ -7,7 +7,7 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <a href="{{route('user.create')}}" class="btn btn-primary float-right">Create user</a>
+        <a href="{{route('dashboard.user.create')}}" class="btn btn-primary float-right">Create user</a>
         <h4>Users List</h4>
     </div>
     <div class="card-body">
@@ -18,6 +18,7 @@
                     <th>Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Available Surveys</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -33,14 +34,22 @@
                         @endif
                     </td>
                     <td>
+                        @if ($user->surveys->count() > 0)
+                            @foreach ($user->surveys as $survey)
+                                <span class="badge badge-info">{{$survey->title}}</span>
+                            @endforeach
+                        @else
+                            <span class="badge badge-warning">
+                                I'm admin i have no surveys
+                            </span>
+                        @endif
+                    </td>
+                    <td>
                         <div class="btn-group">
-                            <a href="{{route('user.show', $user->id)}}" class="btn btn-sm btn-secondary">
-                                Show
-                            </a>
-                            <a href="{{route('user.edit', $user->id)}}" class="btn btn-sm btn-success">
+                            <a href="{{route('dashboard.user.edit', $user->id)}}" class="btn btn-sm btn-success">
                                 Edit
                             </a>
-                            <form action="{{route('user.destroy', $user->id)}}" method="POST" class="d-none">
+                            <form action="{{route('dashboard.user.destroy', $user->id)}}" method="POST" class="d-none">
                                 @csrf
                                 @method('delete')
                             </form>

@@ -10,7 +10,7 @@
             <h4>Create question</h4>
         </div>
         <div class="card-body">
-            <form action="{{route('question.store')}}" method="POST">
+            <form action="{{route('dashboard.question.store')}}" method="POST">
                 @csrf
                 <div class="row">
                     <div class="col-md-6">

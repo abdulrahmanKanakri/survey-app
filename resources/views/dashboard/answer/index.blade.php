@@ -1,13 +1,13 @@
 @extends('dashboard.layouts.master')
 
 @section('title')
-    Answer
+    Answers
 @endsection
 
 @section('content')
 <div class="card">
     <div class="card-header">
-        <a href="{{route('answer.create')}}" class="btn btn-primary float-right">Create answer</a>
+        <a href="{{route('dashboard.answer.create')}}" class="btn btn-primary float-right">Create answer</a>
         <h4>Answers</h4>
     </div>
     <div class="card-body">
@@ -30,10 +30,10 @@
                     <td>{{$answer->question->title}}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{{route('answer.edit', $answer->id)}}" class="btn btn-sm btn-success">
+                            <a href="{{route('dashboard.answer.edit', $answer->id)}}" class="btn btn-sm btn-success">
                                 Edit
                             </a>
-                            <form action="{{route('answer.destroy', $answer->id)}}" method="POST" class="d-none">
+                            <form action="{{route('dashboard.answer.destroy', $answer->id)}}" method="POST" class="d-none">
                                 @csrf
                                 @method('delete')
                             </form>

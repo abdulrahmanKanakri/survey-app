@@ -23,9 +23,30 @@
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <!-- Left navbar links -->
         <ul class="navbar-nav">
-        <li class="nav-item">
-            <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
-        </li>
+            <li class="nav-item">
+                <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="pr-5">
+                <div class="dropdown dropleft">
+                    <a href="#" data-toggle="dropdown" class="dropdown-toggle" style="color: #999">
+                        {{auth()->user()->name}}
+                    </a>
+                    <div class="dropdown-menu">
+                        <form action="{{route('dashboard.auth.logout')}}" method="POST" class="d-none">
+                            @csrf
+                        </form>
+                        <a class="dropdown-item" 
+                            href="#" 
+                            onclick="this.previousElementSibling.submit();"
+                            style="color: #999">
+                            <span class="mr-1">logout</span>
+                            <i class="fa fa-lock"></i>
+                        </a>
+                    </div>
+                </div>
+            </li>
         </ul>
 
     </nav>
@@ -48,7 +69,7 @@
         <nav class="mt-2">
             <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
                 <li class="nav-item">
-                    <a href="{{route('dashboard')}}" class="nav-link">
+                    <a href="{{route('dashboard.home')}}" class="nav-link">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p class="text-capitalize">
                             dashboard
@@ -56,7 +77,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{route('user.index')}}" class="nav-link">
+                    <a href="{{route('dashboard.user.index')}}" class="nav-link">
                         <i class="nav-icon fas fa-users"></i>
                         <p class="text-capitalize">
                             users
@@ -64,7 +85,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{route('role.index')}}" class="nav-link">
+                    <a href="{{route('dashboard.role.index')}}" class="nav-link">
                         <i class="nav-icon fas fa-shield-alt"></i>
                         <p class="text-capitalize">
                             roles
@@ -72,7 +93,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{route('survey.index')}}" class="nav-link">
+                    <a href="{{route('dashboard.survey.index')}}" class="nav-link">
                         <i class="nav-icon fas fa-poll"></i>
                         <p class="text-capitalize">
                             surveys
@@ -80,7 +101,15 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{route('question.index')}}" class="nav-link">
+                    <a href="{{route('dashboard.response.index')}}" class="nav-link">
+                        <i class="nav-icon fas fa-reply"></i>
+                        <p class="text-capitalize">
+                            responses
+                        </p>
+                    </a>
+                </li>
+                {{-- <li class="nav-item">
+                    <a href="{{route('dashboard.question.index')}}" class="nav-link">
                         <i class="nav-icon fas fa-question-circle"></i>
                         <p class="text-capitalize">
                             questions
@@ -88,13 +117,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{route('answer.index')}}" class="nav-link">
+                    <a href="{{route('dashboard.answer.index')}}" class="nav-link">
                         <i class="nav-icon fas fa-reply"></i>
                         <p class="text-capitalize">
                             answers
                         </p>
                     </a>
-                </li>
+                </li> --}}
 
             </ul>
 
@@ -115,7 +144,7 @@
         @endif
 
         <!-- Main content -->
-        <div class="content pt-4">
+        <div class="content py-4">
             <div class="container-fluid">
                 @yield('content')
             </div>

@@ -7,7 +7,10 @@
 @section('content')
 <div class="card">
     <div class="card-header">
-        <a href="{{route('survey.create')}}" class="btn btn-primary float-right">Create survey</a>
+        <a href="{{route('dashboard.survey.create')}}" 
+            class="btn btn-primary btn-sm float-right">
+            Create survey
+        </a>
         <h4>Surveys</h4>
     </div>
     <div class="card-body">
@@ -16,7 +19,9 @@
                 <tr>
                     <th>#</th>
                     <th>title</th>
-                    <th>description</th>
+                    <th>type</th>
+                    <th>publish date</th>
+                    <th>created at</th>
                     <th>actions</th>
                 </tr>
             </thead>
@@ -25,16 +30,20 @@
                 <tr>
                     <td>{{$survey->id}}</td>
                     <td>{{$survey->title}}</td>
-                    <td>{{$survey->description}}</td>
+                    <td>
+                        <span class="badge badge-{{$survey->getColor()}}">{{$survey->type}}</span>
+                    </td>
+                    <td>{{$survey->getPublishDate()}}</td>
+                    <td>{{$survey->created_at}}</td>
                     <td>
                         <div class="btn-group">
-                            <a href="{{route('survey.show', $survey->id)}}" class="btn btn-sm btn-secondary">
+                            <a href="{{route('dashboard.survey.show', $survey->id)}}" class="btn btn-sm btn-info">
                                 Show
                             </a>
-                            <a href="{{route('survey.edit', $survey->id)}}" class="btn btn-sm btn-success">
+                            <a href="{{route('dashboard.survey.edit', $survey->id)}}" class="btn btn-sm btn-success">
                                 Edit
                             </a>
-                            <form action="{{route('survey.destroy', $survey->id)}}" method="POST" class="d-none">
+                            <form action="{{route('dashboard.survey.destroy', $survey->id)}}" method="POST" class="d-none">
                                 @csrf
                                 @method('delete')
                             </form>

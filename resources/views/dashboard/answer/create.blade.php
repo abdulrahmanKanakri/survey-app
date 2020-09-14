@@ -10,7 +10,7 @@
             <h4>Create answer</h4>
         </div>
         <div class="card-body">
-            <form action="{{route('answer.store')}}" method="POST">
+            <form action="{{route('dashboard.answer.store')}}" method="POST">
                 @csrf
                 <div class="row">
                     <div class="col-md-6">

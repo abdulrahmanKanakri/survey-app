@@ -2,14 +2,29 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Answer;
-use App\Models\Question;
-use App\Rules\AnswerType;
+use App\Repositories\Answer\IAnswerRepository;
+use App\Repositories\Question\IQuestionRepository;
+use App\Repositories\Survey\ISurveyRepository;
+use App\Requests\AnswerRequest;
 use Illuminate\Http\Request;
 
 class AnswerController extends Controller
 {
     private $dir = 'dashboard.answer.';
+    private $surveyRepo;
+    private $questionRepo;
+    private $answerRepo;
+
+    public function __construct(
+        ISurveyRepository $surveyRepo,
+        IQuestionRepository $questionRepo,
+        IAnswerRepository $answerRepo
+    ) {
+        $this->surveyRepo = $surveyRepo;
+        $this->questionRepo = $questionRepo;
+        $this->answerRepo = $answerRepo;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -17,7 +32,7 @@ class AnswerController extends Controller
      */
     public function index()
     {
-        $answers = Answer::with('question')->paginate(10);
+        $answers = $this->answerRepo->getAnswers(15);
         return view($this->dir . 'index', compact('answers'));
     }
 
@@ -28,8 +43,8 @@ class AnswerController extends Controller
      */
     public function create()
     {
-        $questions = Question::all();
-        $types = Answer::getTypes();
+        $questions = $this->questionRepo->all();
+        $types = $this->answerRepo->getTypes();
         return view($this->dir . 'create', compact('questions', 'types'));
     }
 
@@ -39,17 +54,10 @@ class AnswerController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(AnswerRequest $request)
     {
-        $request->validate($this->rules());
-
-        $answer = new Answer;
-        $answer->body = $request->body;
-        $answer->type = $request->type;
-        $answer->question_id = $request->question_id;
-        $answer->save();
-
-        return redirect()->route('answer.index')->with('status', [
+        $this->answerRepo->updateOrCreate($request->all());
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully created'
         ]);
@@ -74,9 +82,9 @@ class AnswerController extends Controller
      */
     public function edit($id)
     {
-        $answer = Answer::with('question')->find($id);
-        $questions = Question::all();
-        $types = Answer::getTypes();
+        $answer = $this->answerRepo->getAnswerById($id);
+        $questions = $this->questionRepo->all();
+        $types = $this->answerRepo->getTypes();
         return view($this->dir . 'edit', compact('answer', 'questions', 'types'));
     }
 
@@ -87,17 +95,10 @@ class AnswerController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(AnswerRequest $request, $id)
     {
-        $request->validate($this->rules());
-        
-        $answer = Answer::find($id);
-        $answer->body = $request->body;
-        $answer->type = $request->type;
-        $answer->question_id = $request->question_id;
-        $answer->save();
-
-        return redirect()->route('answer.index')->with('status', [
+        $this->answerRepo->updateOrCreate($request->all(), $id);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully updated'
         ]);
@@ -111,19 +112,40 @@ class AnswerController extends Controller
      */
     public function destroy($id)
     {
-        Answer::find($id)->delete();
-        return redirect()->route('answer.index')->with('status', [
+        $this->answerRepo->delete($id);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully deleted'
         ]);
     }
 
-    private function rules()
-    {
-        return [
-            'body' => 'required',
-            'type' => ['required', new AnswerType],
-            'question_id' => 'required|exists:questions,id'
-        ];
+    public function createAnswer(Request $request) {
+        $answer = $this->answerRepo->updateOrCreate($request->all());
+        return response()->json($answer);
     }
+
+    public function cerateMultipleAnswers(Request $request) {
+        $answers = [];
+        foreach($request->answers as $answer) {
+            $answers[] = $this->answerRepo->updateOrCreate([
+                'body' => $answer['value'],
+                'question_id' => $request->question_id
+            ]);
+        }
+        return response()->json($answers);
+    }
+
+    public function editAnswer(Request $request, $id) {
+        $answer = $this->answerRepo->updateOrCreate($request->all(), $id);
+        return response()->json($answer);
+    }
+
+    public function deleteAnswer($id) {
+        $this->answerRepo->delete($id);
+        return response()->json([
+            'success' => true,
+            'msg' => 'Successfully deleted'
+        ]);
+    }
+
 }

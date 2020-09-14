@@ -2,13 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Question;
-use App\Models\Survey;
-use Illuminate\Http\Request;
+use App\Repositories\Question\IQuestionRepository;
+use App\Repositories\Survey\ISurveyRepository;
+use App\Requests\QuestionRequest;
 
 class QuestionController extends Controller
 {
     private $dir = 'dashboard.question.';
+    private $surveyRepo;
+    private $questionRepo;
+
+    public function __construct(
+        ISurveyRepository $surveyRepo,
+        IQuestionRepository $questionRepo
+    ) {
+        $this->surveyRepo = $surveyRepo;
+        $this->questionRepo = $questionRepo;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -16,7 +27,7 @@ class QuestionController extends Controller
      */
     public function index()
     {
-        $questions = Question::with('survey', 'answers')->paginate(10);
+        $questions = $this->questionRepo->getQuestions(15);
         return view($this->dir . 'index', compact('questions'));
     }
 
@@ -27,7 +38,7 @@ class QuestionController extends Controller
      */
     public function create()
     {
-        $surveys = Survey::all();
+        $surveys = $this->surveyRepo->all();
         return view($this->dir . 'create', compact('surveys'));
     }
 
@@ -37,16 +48,10 @@ class QuestionController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(QuestionRequest $request)
     {
-        $request->validate($this->rules());
-
-        $question = new Question;
-        $question->title = $request->title;
-        $question->survey_id = $request->survey_id;
-        $question->save();
-
-        return redirect()->route('question.index')->with('status', [
+        $this->questionRepo->updateOrCreate($request->all());
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully created'
         ]);
@@ -71,8 +76,8 @@ class QuestionController extends Controller
      */
     public function edit($id)
     {
-        $question = Question::with('survey', 'answers')->find($id);
-        $surveys = Survey::all();
+        $question = $this->questionRepo->getQuestionById($id);
+        $surveys = $this->surveyRepo->all();
         return view($this->dir . 'edit', compact('question', 'surveys'));
     }
 
@@ -83,16 +88,10 @@ class QuestionController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(QuestionRequest $request, $id)
     {
-        $request->validate($this->rules());
-        
-        $question = Question::find($id);
-        $question->title = $request->title;
-        $question->survey_id = $request->survey_id;
-        $question->save();
-
-        return redirect()->route('question.index')->with('status', [
+        $this->questionRepo->updateOrCreate($request->all(), $id);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully updated'
         ]);
@@ -106,18 +105,10 @@ class QuestionController extends Controller
      */
     public function destroy($id)
     {
-        Question::find($id)->delete();
-        return redirect()->route('question.index')->with('status', [
+        $this->questionRepo->delete($id);
+        return redirect()->route($this->dir . 'index')->with('status', [
             'type' => 'success',
             'msg' => 'Successfully deleted'
         ]);
-    }
-
-    private function rules()
-    {
-        return [
-            'title' => 'required|string|max:255',
-            'survey_id' => 'required|exists:surveys,id'
-        ];
     }
 }

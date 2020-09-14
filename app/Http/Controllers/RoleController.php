@@ -2,21 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
+use App\Http\Controllers\Controller;
+use App\Requests\RoleRequest;
+use App\Repositories\Role\IRoleRepository;
 
 class RoleController extends Controller
 {
-    // public function __construct()
-    // {
-    //     $this->middleware('permission:edit roles', ['only' => ['edit', 'update']]);
-    //     $this->middleware('permission:create roles', ['only' => ['create', 'store']]);
-    //     $this->middleware('permission:delete roles', ['only' => ['destroy']]);
-    //     $this->middleware('permission:show roles', ['only' => ['index']]);
-    // }
-
     private $dir = 'dashboard.role.';
+    private $route = 'dashboard.role.';
+    private $roleRepo;
+
+    public function __construct(IRoleRepository $roleRepo)
+    {
+        $this->roleRepo = $roleRepo;
+        $this->permissions();
+    }
+    
+    private function permissions() {
+        $this->middleware('permission:role-list', ['only' => ['index']]);
+        $this->middleware('permission:role-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:role-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:role-delete', ['only' => ['destroy']]);    
+    }
 
     /**
      * Display a listing of the resource.
@@ -25,7 +32,8 @@ class RoleController extends Controller
      */
     public function index()
     {
-        $roles = Role::all();
+        $roles = $this->roleRepo->getRoles();
+        $roles->shift(); // remove the first item which is the admin Role
         return view($this->dir . 'index', compact('roles'));
     }
 
@@ -36,31 +44,8 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $booksPermissions = Permission::where('name', 'LIKE', '%books%')->get();
-        $videosPermissions = Permission::where('name', 'LIKE', '%videos%')->get();
-        $articlesPermissions = Permission::where('name', 'LIKE', '%articles%')->get();
-        $categoriesPermissions = Permission::where('name', 'LIKE', '%categories%')->get();
-        $newsPermissions = Permission::where('name', 'LIKE', '%news%')->get();
-        $rolesPermissions = Permission::where('name', 'LIKE', '%roles%')->get();
-        $usersPermissions = Permission::where('name', 'LIKE', '%users%')->get();
-        $settingsSecPermissions = Permission::where('name', 'LIKE', '%settings%')
-                                        ->orWhere('name', 'LIKE', '%sections%')->get();
-
-        $contactsBioPermissions = Permission::where('name', 'LIKE', '%biography%')
-                                        ->orWhere('name', 'LIKE', '%contacts%')->get();
-
-        return view($this->dir . 'create', compact(
-            'permissions',
-            'booksPermissions',
-            'videosPermissions',
-            'articlesPermissions',
-            'categoriesPermissions',
-            'newsPermissions',
-            'rolesPermissions',
-            'usersPermissions',
-            'settingsSecPermissions',
-            'contactsBioPermissions'
-        ));
+        $permissions = $this->roleRepo->getPermissions();
+        return view($this->dir . 'create', compact('permissions'));
     }
 
     /**
@@ -69,11 +54,13 @@ class RoleController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(RoleRequest $request)
     {
-        $role = Role::create(['name' => $request->name]);
-        $role->syncPermissions($request->permissions);
-        return redirect()->route('role.index')->with('success', 'Successfully created');
+        $this->roleRepo->create($request->all());
+        return redirect()->route($this->route . 'index')->with('status', [
+            'type' => 'success', 
+            'msg' => 'Successfully created'
+        ]);
     }
 
     /**
@@ -95,33 +82,9 @@ class RoleController extends Controller
      */
     public function edit($id)
     {
-        $role = Role::with('permissions')->find($id);    
-        $booksPermissions = Permission::where('name', 'LIKE', '%books%')->get();
-        $videosPermissions = Permission::where('name', 'LIKE', '%videos%')->get();
-        $articlesPermissions = Permission::where('name', 'LIKE', '%articles%')->get();
-        $categoriesPermissions = Permission::where('name', 'LIKE', '%categories%')->get();
-        $newsPermissions = Permission::where('name', 'LIKE', '%news%')->get();
-        $rolesPermissions = Permission::where('name', 'LIKE', '%roles%')->get();
-        $usersPermissions = Permission::where('name', 'LIKE', '%users%')->get();
-        $settingsSecPermissions = Permission::where('name', 'LIKE', '%settings%')
-                                        ->orWhere('name', 'LIKE', '%sections%')->get();
-
-        $contactsBioPermissions = Permission::where('name', 'LIKE', '%biography%')
-                                        ->orWhere('name', 'LIKE', '%contacts%')->get();
-
-        return view($this->dir . 'edit', compact(
-            'role',
-            'permissions',
-            'booksPermissions',
-            'videosPermissions',
-            'articlesPermissions',
-            'categoriesPermissions',
-            'newsPermissions',
-            'rolesPermissions',
-            'usersPermissions',
-            'settingsSecPermissions',
-            'contactsBioPermissions'
-        ));
+        $role = $this->roleRepo->getRoleById($id);
+        $permissions = $this->roleRepo->getPermissions();
+        return view($this->dir . 'edit', compact('role', 'permissions'));
     }
 
     /**
@@ -131,12 +94,13 @@ class RoleController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(RoleRequest $request, $id)
     {
-        $role = Role::find($id);
-        $role->name = $request->name;
-        $role->syncPermissions($request->permissions);
-        return redirect()->route('role.index')->with('success', 'Successfully updated');
+        $this->roleRepo->update($request->all(), $id);
+        return redirect()->route($this->route . 'index')->with('status', [
+            'type' => 'success', 
+            'msg' => 'Successfully updated'
+        ]);
     }
 
     /**
@@ -147,7 +111,10 @@ class RoleController extends Controller
      */
     public function destroy($id)
     {
-        Role::find($id)->delete();
-        return redirect()->route('role.index')->with('success', 'Successfully deleted');
+        $this->roleRepo->delete($id);
+        return redirect()->route($this->route . 'index')->with('status', [
+            'type' => 'success', 
+            'msg' => 'Successfully deleted'
+        ]);
     }
 }
