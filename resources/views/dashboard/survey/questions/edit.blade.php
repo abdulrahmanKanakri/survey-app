@@ -19,15 +19,16 @@
 @endpush
 
 @section('content')
+
 <form action="{{route('dashboard.survey.question.update', [$survey->id, $question->id])}}" 
     id="form"
     method="POST" 
     enctype="multipart/form-data">
     @csrf
     @method('put')
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-header">
-            <h4>Edit question</h4>
+            Edit question
         </div>
         <div class="card-body">
             <div class="row">
@@ -59,115 +60,130 @@
                     </select>
                 </div>
             </div>
-            <hr />
-            <div id="wrapper" class="mb-3 {{$question->answers->count() ?: 'd-none'}}">
-                <div class="mb-3">
-                    <label for="answer">Add new answer</label>
-                    <div class="input-group">
-                        <input type="text" id="answer" class="form-control" 
-                            placeholder="Write answer body" />
-                        <div class="input-group-append">
-                            <button id="add-new-btn" class="btn btn-primary" type="button">Add</button>
+            <hr>
+            <div id="based">
+                @if ($question->dependent_question_id == null)
+                    <a href="javascript:void(0)" 
+                        style="font-size: 14px" 
+                        onclick="previewBased(this)"
+                        >Based on answer in other question ?
+                    </a>
+                @endif
+                <div class="mt-1 {{ $question->dependent_question_id ?: 'd-none' }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div>
+                                <label for="based-questions">based question</label>
+                                <select name="based_question" id="based-questions" 
+                                    class="form-control" 
+                                    {{ $question->dependent_question_id ?: 'disabled' }}
+                                >
+                                    <option value="" selected disabled hidden>Choose question</option>
+                                    @foreach ($survey->questions as $_question)
+                                        @if ($_question->type == 'radio' && $_question->id != $question->id)
+                                        <option value="{{$_question->id}}" 
+                                            data-answers="{{$_question->answers}}"
+                                            @if ($question->dependent_question_id == $_question->id)
+                                                selected
+                                            @endif
+                                            >{{$_question->title}}
+                                        </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="{{ $question->dependent_answer_id ?: 'd-none' }}">
+                                <label for="based-answers">based answer</label>
+                                <select 
+                                    name="based_answer" 
+                                    id="based-answers" 
+                                    class="form-control"
+                                    {{ $question->dependent_answer_id ?: 'disabled' }}
+                                >
+                                @if ($question->dependent_answer_id)
+                                    @foreach ($question->dependentQuestion->answers as $answer)
+                                        <option value="{{$answer->id}}" 
+                                            @if ($question->dependent_answer_id == $answer->id)
+                                                selected
+                                            @endif
+                                            >{{$answer->body}}
+                                        </option>
+                                    @endforeach
+                                @endif
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <a href="javascript:void(0)" style="font-size: 12px" onclick="addOtherOption()">
-                        <span>Add "other" option</span> 
-                        <i class="fa fa-plus-circle"></i>
-                    </a>
-                </div>
-                <div id="answers-wrapper">
-                    <button 
-                        type="button"
-                        class="btn btn-success btn-sm float-right"
-                        onclick="this.nextElementSibling.click()"
-                        >Upload from excel
-                    </button>
-                    <input type="file" name="excel" id="excelFile" class="d-none">
-                    <h4 class="text-uppercase">Answers</h4>
-                    <hr>
-                    <div id="answers-container">
-                        @if ($question->answers->count())
-                            @foreach ($question->answers as $answer)
-                            <div class="d-flex">
-                                <a href="javascript:void(0)" 
-                                    class="remove" 
-                                    onclick="removeAnswer(this, '{{ $answer->id }}')"
-                                >
-                                    <i class="fa fa-trash"></i>
-                                </a>
-                                <a href="javascript:void(0)" 
-                                    class="edit mr-2" 
-                                    onclick="editAnswer(this, '{{ $answer->id }}')"
-                                >
-                                    <i class="fa fa-edit"></i>
-                                </a>
-                                <label>{{$answer->body}}</label>
-                            </div>
-                            @endforeach
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <button class="btn btn-primary" type="button" onclick="submitForm()">
-                Submit
-            </button>
-        </div>
-    </div>
-    <div id="based">
-        <a href="javascript:void(0)" 
-            style="font-size: 14px" 
-            onclick="previewBased(this)"
-            >Based on answer in other question ?
-        </a>
-        <div class="card mt-3 {{ $question->dependent_question_id ?: 'd-none' }}">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <select name="based_question" id="based-questions" 
-                            class="form-control" 
-                            {{ $question->dependent_question_id ?: 'disabled' }}
-                        >
-                            <option value="" selected disabled hidden>Choose question</option>
-                            @foreach ($survey->questions as $_question)
-                                @if ($_question->type == 'radio')
-                                <option value="{{$_question->id}}" 
-                                    data-answers="{{$_question->answers}}"
-                                    @if ($question->dependent_question_id == $_question->id)
-                                        selected
-                                    @endif
-                                    >{{$_question->title}}
-                                </option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <select 
-                            name="based_answer" 
-                            id="based-answers" 
-                            class="form-control {{ $question->dependent_question_id ?: 'd-none' }}"
-                            {{ $question->dependent_question_id ?: 'disabled' }}
-                        >
-                        @if ($question->dependent_question_id)
-                            @foreach ($question->dependentQuestion->answers as $answer)
-                                <option value="{{$answer->id}}" 
-                                    @if ($question->dependent_answer_id == $answer->id)
-                                        selected
-                                    @endif
-                                    >{{$answer->body}}
-                                </option>
-                            @endforeach
-                        @endif
-                        </select>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="wrapper" class="card mb-3 {{$question->answers->count() ?: 'd-none'}}">
+        <div class="card-header">
+            <div class="float-right">
+                <button 
+                    type="button"
+                    class="btn btn-success btn-sm"
+                    onclick="this.nextElementSibling.click()"
+                    >Upload from excel
+                </button>
+                <input type="file" id="excelFile" class="d-none">
+            </div>
+            <div>Answers</div>
+        </div>
+        <div class="card-body">
+            <div>
+                <label for="answer">Add new answer</label>
+                <div class="input-group">
+                    <input type="text" id="answer" class="form-control" 
+                        placeholder="Write answer body" />
+                    <div class="input-group-append">
+                        <button id="add-new-btn" class="btn btn-primary" type="button">Add</button>
+                    </div>
+                </div>
+                <a href="javascript:void(0)" style="font-size: 12px" onclick="addOtherOption()">
+                    <span>Add "other" option</span> 
+                    <i class="fa fa-plus-circle"></i>
+                </a>
+            </div>
+            <hr>
+            <div id="answers-container">
+                @if ($question->answers->count())
+                    @foreach ($question->answers as $answer)
+                    <div class="d-flex">
+                        <a href="javascript:void(0)" 
+                            class="remove" 
+                            onclick="removeAnswer(this, '{{ $answer->id }}')"
+                        >
+                            <i class="fa fa-trash"></i>
+                        </a>
+                        <a href="javascript:void(0)" 
+                            class="edit mr-2" 
+                            onclick="editAnswer(this, '{{ $answer->id }}')"
+                        >
+                            <i class="fa fa-edit"></i>
+                        </a>
+                        <label data-id="{{$answer->id}}"
+                            >{{$answer->body}}
+                        </label>
+                    </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="button" onclick="submitForm()">
+        Submit
+    </button>
 </form>
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <script>
     const basedQuestions = document.getElementById('based-questions');
@@ -185,7 +201,7 @@
         });
         
         basedAnswers.innerHTML = options;
-        basedAnswers.classList.remove('d-none');
+        basedAnswers.parentElement.classList.remove('d-none');
     }
 
     function previewBased(a) {
@@ -194,6 +210,7 @@
         cardBased.querySelectorAll('select[disabled]').forEach(select => {
             select.removeAttribute('disabled');
         });
+        a.remove();
     }
 </script>
 
@@ -202,6 +219,11 @@
 let answers_container = document.getElementById('answers-container');
 let answer = document.getElementById('answer');
 let addNewBtn = document.getElementById('add-new-btn');
+
+new Sortable(answers_container, {
+    animation: 150,
+    ghostClass: 'sortable-ghost'
+});
 
 addNewBtn.onclick = () => {
     cerateAnswer(answer.value);
@@ -226,6 +248,12 @@ function addOtherOption() {
 }
 
 function submitForm() {
+    let labels = [...answers_container.getElementsByTagName('label')];
+    labels.forEach((label, i) => {
+        let inputs = `<input type="hidden" name="answers[${i}][id]" value="${label.dataset.id}">
+                    <input type="hidden" name="answers[${i}][ordering]" value="${i}">`;
+        label.insertAdjacentHTML('afterend', inputs);
+    });
     document.getElementById('form').submit();
 }
 
@@ -259,7 +287,9 @@ function cerateAnswer(value) {
                             <a href="javascript:void(0)" class="edit mr-2" onclick="editAnswer(this, ${res.id})">
                                 <i class="fa fa-edit"></i>
                             </a>
-                            <label>${res.body}</label>`;
+                            <label data-id="${res.id}" 
+                                >${res.body}
+                            </label>`;
             
             answers_container.appendChild(col);
         }
@@ -285,7 +315,9 @@ function cerateMultipleAnswers(answers) {
                                 <a href="javascript:void(0)" class="edit mr-2" onclick="editAnswer(this, ${ans.id})">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <label>${ans.body}</label>`;
+                                <label data-id="${ans.id}" 
+                                    >${ans.body}
+                                </label>`;
                 
                 answers_container.appendChild(col);
             });
@@ -301,7 +333,7 @@ function editAnswer(a, id) {
                     <input 
                         type="text" 
                         class="form-control" 
-                        value="${label.innerHTML}"
+                        value="${label.innerHTML.trim()}"
                     />
                     <div class="input-group-append">
                         <button 

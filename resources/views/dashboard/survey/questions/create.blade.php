@@ -19,14 +19,15 @@
 @endpush
 
 @section('content')
+
 <form action="{{route('dashboard.survey.question.store', $survey->id)}}" 
     id="form"
     method="POST" 
     enctype="multipart/form-data">
     @csrf
-    <div class="card">
+    <div class="card mb-3">
         <div class="card-header">
-            <h4>Create question</h4>
+            Create question
         </div>
         <div class="card-body">
             <div class="row">
@@ -52,79 +53,90 @@
                     </select>
                 </div>
             </div>
-            <hr />
-            <div id="wrapper" class="mb-3 d-none">
-                <div class="mb-3">
-                    <label for="answer">Add new answer</label>
-                    <div class="input-group">
-                        <input type="text" id="answer" class="form-control" 
-                            placeholder="Write answer body" />
-                        <div class="input-group-append">
-                            <button id="add-new-btn" class="btn btn-primary" type="button">Add</button>
+            <hr>
+            <div id="based">
+                <a href="javascript:void(0)" 
+                    style="font-size: 14px" 
+                    onclick="previewBased(this)"
+                    >Based on answer in other question ?
+                </a>
+                <div class="mt-1 d-none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div>
+                                <label for="based-questions">based question</label>
+                                <select name="based_question" id="based-questions" class="form-control" disabled>
+                                    <option value="" selected disabled hidden>Choose question</option>
+                                    @foreach ($survey->questions as $question)
+                                        @if ($question->type == 'radio')
+                                        <option value="{{$question->id}}" 
+                                            data-answers="{{$question->answers}}"
+                                            >{{$question->title}}
+                                        </option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-none">
+                                <label for="based-answers">based answer</label>
+                                <select name="based_answer" 
+                                    id="based-answers" 
+                                    class="form-control"
+                                    disabled
+                                ></select>
+                            </div>
                         </div>
                     </div>
-                    <a href="javascript:void(0)" style="font-size: 12px" onclick="addOtherOption()">
-                        <span>Add "other" option</span> 
-                        <i class="fa fa-plus-circle"></i>
-                    </a>
                 </div>
-                <div id="answers-wrapper">
+            </div>
+        </div>
+    </div>
+
+    <div id="wrapper" class="card mb-3 d-none">
+        <div class="card-header">
+            <div class="d-flex justify-content-between">
+                <div>Answers</div>
+                <div>
                     <button 
                         type="button"
                         class="btn btn-success btn-sm float-right"
                         onclick="this.nextElementSibling.click()"
                         >Upload from excel
                     </button>
-                    <input type="file" name="excel" id="excelFile" class="d-none">
-                    <h4 class="text-uppercase">Answers</h4>
-                    <hr>
-                    <div id="answers-container"></div>
-                </div>
-            </div>
-            <button class="btn btn-primary" type="button" onclick="submitForm()">
-                Submit
-            </button>
-        </div>
-    </div>
-    <div id="based">
-        <a href="javascript:void(0)" 
-            style="font-size: 14px" 
-            onclick="previewBased(this)"
-            >Based on answer in other question ?
-        </a>
-        <div class="card mt-3 d-none">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <select name="based_question" id="based-questions" class="form-control" disabled>
-                            <option value="" selected disabled hidden>Choose question</option>
-                            @foreach ($survey->questions as $question)
-                                @if ($question->type == 'radio')
-                                <option value="{{$question->id}}" 
-                                    data-answers="{{$question->answers}}"
-                                    >{{$question->title}}
-                                </option>
-                                @endif
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <select name="based_answer" 
-                            id="based-answers" 
-                            class="form-control d-none"
-                            disabled
-                        ></select>
-                    </div>
+                    <input type="file" id="excelFile" class="d-none">
                 </div>
             </div>
         </div>
+        <div class="card-body">
+            <div>
+                <label for="answer">Add new answer</label>
+                <div class="input-group">
+                    <input type="text" id="answer" class="form-control" 
+                        placeholder="Write answer body" />
+                    <div class="input-group-append">
+                        <button id="add-new-btn" class="btn btn-primary" type="button">Add</button>
+                    </div>
+                </div>
+                <a href="javascript:void(0)" style="font-size: 12px" onclick="addOtherOption()">
+                    <span>Add "other" option</span> 
+                    <i class="fa fa-plus-circle"></i>
+                </a>
+            </div>
+            <hr>
+            <div id="answers-container"></div>
+        </div>
     </div>
-
+    
+    <button class="btn btn-primary" type="button" onclick="submitForm()">
+        Submit
+    </button>
 </form>
 @endsection
 
 @push('scripts')
-
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
     const basedQuestions = document.getElementById('based-questions');
     const basedAnswers = document.getElementById('based-answers');
@@ -141,7 +153,7 @@
         });
         
         basedAnswers.innerHTML = options;
-        basedAnswers.classList.remove('d-none');
+        basedAnswers.parentElement.classList.remove('d-none');
     }
 
     function previewBased(a) {
@@ -150,6 +162,7 @@
         cardBased.querySelectorAll('select[disabled]').forEach(select => {
             select.removeAttribute('disabled');
         });
+        a.remove();
     }
 </script>
 
@@ -157,6 +170,11 @@
 
 let answers_container = document.getElementById('answers-container');
 let answer = document.getElementById('answer');
+
+new Sortable(answers_container, {
+    animation: 150,
+    ghostClass: 'sortable-ghost'
+});
 
 document.getElementById('add-new-btn').onclick = () => {
     cerateAnswer(answer.value);

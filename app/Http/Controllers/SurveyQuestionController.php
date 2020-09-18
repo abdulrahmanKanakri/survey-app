@@ -101,6 +101,10 @@ class SurveyQuestionController extends Controller
             $survey->id
         );
         $this->questionRepo->updateOrCreate($mappedData, $question->id);
+        
+        foreach($request->answers as $answer) {
+            $this->answerRepo->updateOrdering($answer['ordering'], $answer['id']);
+        }
 
         return redirect()->route($this->dir . 'show', $survey->id)->with('status', [
             'type' => 'success',

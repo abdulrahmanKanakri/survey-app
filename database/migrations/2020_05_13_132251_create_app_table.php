@@ -5,6 +5,7 @@ use App\Models\Survey;
 use App\Models\SurveyUser;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CreateAppTable extends Migration
@@ -41,6 +42,7 @@ class CreateAppTable extends Migration
             $table->id();
             $table->foreignId('question_id');
             $table->text('body');
+            $table->unsignedBigInteger('ordering')->default(0);
             $table->timestamps();
         });
 
@@ -59,6 +61,8 @@ class CreateAppTable extends Migration
             $table->text('response');
         });
 
+        DB::statement($this->responses_view());
+
         $this->relations();
     }
 
@@ -69,11 +73,16 @@ class CreateAppTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('surveys');
-        Schema::dropIfExists('questions');
-        Schema::dropIfExists('answers');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        Schema::dropAllViews();
+        Schema::dropIfExists('user_answers');
         Schema::dropIfExists('survey_user');
-        Schema::dropIfExists('survey_user_question');
+        Schema::dropIfExists('answers');
+        Schema::dropIfExists('questions');
+        Schema::dropIfExists('surveys');
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     private function relations() {
@@ -92,22 +101,22 @@ class CreateAppTable extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
-        Schema::table('survey_user_question', function (Blueprint $table) {
+        Schema::table('user_answers', function (Blueprint $table) {
             $table->foreign('survey_user_id')->references('id')->on('survey_user')->onDelete('cascade');
             $table->foreign('question_id')->references('id')->on('questions')->onDelete('cascade');
         });
     }
 
     private function responses_view() {
-        $query =   'CREATE VIEW responses_view AS
-                    SELECT s_u.survey_id, s.title survey_title, s_u.user_id, 
-                    u.name username, u.ip user_ip_address,
-                    u_a.question_id, q.title question_title, u_a.response,
-                    q.dependent_question_id, q.dependent_answer_id
-                    FROM user_answers u_a
-                    INNER JOIN survey_user as s_u ON survey_user_id = s_u.id
-                    INNER JOIN surveys as s ON s_u.survey_id = s.id
-                    INNER JOIN users as u ON s_u.user_id = u.id
-                    INNER JOIN questions as q ON u_a.question_id = q.id';
+        return 'CREATE VIEW responses_view AS
+                SELECT s_u.survey_id, s.title survey_title, s_u.user_id, 
+                u.name username, u.ip user_ip_address,
+                u_a.question_id, q.title question_title, u_a.response,
+                q.dependent_question_id, q.dependent_answer_id
+                FROM user_answers u_a
+                INNER JOIN survey_user as s_u ON survey_user_id = s_u.id
+                INNER JOIN surveys as s ON s_u.survey_id = s.id
+                INNER JOIN users as u ON s_u.user_id = u.id
+                INNER JOIN questions as q ON u_a.question_id = q.id';
     }
 }

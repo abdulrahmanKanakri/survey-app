@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Answer extends Model
@@ -15,5 +16,12 @@ class Answer extends Model
 
     public function dependentQuestions() {
         return $this->hasMany(Question::class, 'dependent_answer_id');
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope('ordering', function(Builder $builder) {
+            return $builder->orderBy('ordering');
+        });
     }
 }

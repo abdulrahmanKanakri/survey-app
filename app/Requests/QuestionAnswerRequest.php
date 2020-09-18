@@ -29,6 +29,8 @@ class QuestionAnswerRequest extends FormRequest
             'question_title' => 'required',
             'question_type' => 'required',
             'question_required' => 'required',
+            'based_question' => 'nullable',
+            'based_answer' => 'nullable',
             'answers' => $edit ? 'nullable' : ['required', 'array'],
             'answers.*' => $edit ? 'nullable' : 'required'
         ];

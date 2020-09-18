@@ -20,13 +20,19 @@ class AnswerRepositoryImpl implements IAnswerRepository {
     
     public function updateOrCreate($data, $id = null) {
         $answer = $id == null ? new Answer : Answer::find($id);
-        $answer->body = $data['body'];
         $answer->question_id = $data['question_id'];
+        $answer->body = $data['body'];
         $answer->save();
         return $answer;
     }
     
     public function delete($id) {
         Answer::find($id)->delete();
+    }
+
+    public function updateOrdering($ordering, $id) {
+        $answer = Answer::find($id);
+        $answer->ordering = intval($ordering);
+        $answer->save();
     }
 }

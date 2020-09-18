@@ -14,4 +14,6 @@ interface IAnswerRepository {
     
     public function delete($id);
 
+    public function updateOrdering($ordering, $id);
+
 }
