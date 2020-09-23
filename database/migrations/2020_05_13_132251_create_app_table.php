@@ -32,7 +32,7 @@ class CreateAppTable extends Migration
             $table->foreignId('survey_id');
             $table->string('title');
             $table->enum('type', Question::TYPES);
-            $table->tinyInteger('required')->default(0);
+            $table->tinyInteger('required')->default(100);
             $table->foreignId('dependent_question_id')->nullable();
             $table->foreignId('dependent_answer_id')->nullable();
             $table->timestamps();

@@ -69,7 +69,11 @@ class SurveyController extends Controller
     }
     
     public function submitInProgressSurvey(Request $request, $uuid) {
-
+        // dd(
+        //     $request->all(),
+        //     !($request->question['answer'] ?? false) &&
+        //     !($request->question['answers'] ?? false)
+        // );
         $index              = session('index');
         $survey             = session('taken_survey');
         $questions_list     = session('questions_list');
@@ -88,42 +92,55 @@ class SurveyController extends Controller
             ]);
         }
 
-        // check if the answer is not modified by the user
-        if($question->type == 'checkbox') {
-
-            // remove the deplicated values if someone want duplicate the data
-            $answerdQuestion['answers'] = array_unique($answerdQuestion['answers']);
-
-            $check = true;
-            foreach($answerdQuestion['answers'] as $answer) {
-                if(!$question->answers->contains('body', $answer)) {
-                    $check = false;
-                    break;
+        // validate required question
+        if(
+            !($request->question['answer'] ?? false) &&
+            !($request->question['answers'] ?? false)
+        ) {
+            if($question->required == 1) {
+                return redirect()->back()->with('status', [
+                    'type' => 'error',
+                    'msg' => 'The questions is required'
+                ]);
+            }
+        } else {
+            // check if the answer is not modified by the user
+            if($question->type == 'checkbox') {
+    
+                // remove the deplicated values if someone want duplicate the data
+                $answerdQuestion['answers'] = array_unique($answerdQuestion['answers']);
+    
+                $check = true;
+                foreach($answerdQuestion['answers'] as $answer) {
+                    if(!$question->answers->contains('body', $answer)) {
+                        $check = false;
+                        break;
+                    }
+                }
+                if($check == false) {
+                    return redirect()->back()->with('status', [
+                        'type' => 'error',
+                        'msg' => 'Do not mess, please'
+                    ]);
+                }
+            } elseif($question->type == 'radio') {
+                if(
+                    !$question->answers->contains('body', $answerdQuestion['answer']) &&
+                    !$question->answers->contains('body', 'other')
+                ) {
+                    return redirect()->back()->with('status', [
+                        'type' => 'error',
+                        'msg' => 'Do not mess, please'
+                    ]);
                 }
             }
-            if($check == false) {
-                return redirect()->back()->with('status', [
-                    'type' => 'error',
-                    'msg' => 'Do not mess, please'
-                ]);
-            }
-        } elseif($question->type == 'radio') {
-            if(
-                !$question->answers->contains('body', $answerdQuestion['answer']) &&
-                !$question->answers->contains('body', 'other')
-            ) {
-                return redirect()->back()->with('status', [
-                    'type' => 'error',
-                    'msg' => 'Do not mess, please'
-                ]);
-            }
+            
+            // add the answerd question to the list
+            session()->push('answerd_questions', $answerdQuestion);
+    
+            // rebuild the questions list
+            $this->rebuildQuestionsList();
         }
-        
-        // add the answerd question to the list
-        session()->push('answerd_questions', $answerdQuestion);
-
-        // rebuild the questions list
-        $this->rebuildQuestionsList();
 
         $index = session('index');
         $index++;

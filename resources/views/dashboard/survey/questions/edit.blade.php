@@ -240,7 +240,13 @@ answer.onkeypress = function(e) {
 }
 
 function addOtherOption() {
-    if(document.querySelector('input[value="other"]') != null) {
+    let otherExist = false;
+    [...document.getElementsByTagName('label')].forEach(label => {
+        if(label.innerHTML.trim() == 'other') {
+            otherExist = true;
+        }
+    });
+    if(otherExist) {
         showAlert('warning', 'The other option is already exist');
         return;
     }

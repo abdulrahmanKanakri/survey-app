@@ -7,9 +7,11 @@ if(optionsRadio) {
             if(textareaOther) {
                 if(option.value == "other") {
                     textareaOther.classList.remove('d-none');
+                    textareaOther.disabled = false;
                 } else {
                     textareaOther.classList.add('d-none');
                     textareaOther.value = '';
+                    textareaOther.disabled = true;
                 }
             }
         });
@@ -44,21 +46,25 @@ if(nextBtn) {
 
         // Validate the question is required
         let flag = false;
-        Array.from(formInAnsweringPage.elements).forEach(elem => {
-            if(elem.type == 'radio' || elem.type == 'checkbox') {
-                if(elem.checked && elem.value != 'other') {
+        if(questionDataInfo.required == 1) {
+            Array.from(formInAnsweringPage.elements).forEach(elem => {
+                if(elem.type == 'radio' || elem.type == 'checkbox') {
+                    if(elem.checked && elem.value != 'other') {
+                        flag = true;
+                    }
+                } else if(
+                    // this to allow input hidden like _token & _method
+                    elem.type != 'hidden' &&
+                    // this to prevent user send only white spaces
+                    elem.value.replace(/\s/g, '').length > 0
+                ) {
                     flag = true;
                 }
-            } else if(
-                // this to allow input hidden like _token & _method
-                elem.type != 'hidden' &&
-                // this to prevent user send only white spaces
-                elem.value.replace(/\s/g, '').length > 0
-            ) {
-                flag = true;
-            }
-        });
-
+            });
+        } else {
+            flag = true;
+        }
+        
         if(flag) {
             formInAnsweringPage.submit();
         } else {

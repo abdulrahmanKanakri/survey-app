@@ -26,7 +26,8 @@
                     name="question[answer]" 
                     class="form-control d-none" 
                     id="textarea-other"
-                    placeholder="Write your answer here.."
+                    placeholder="Write your answer here.." 
+                    disabled
                 ></textarea>
             @endif
         @endif
