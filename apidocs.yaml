@@ -1,0 +1,1011 @@
+openapi: 3.0.0
+info:
+  description: Survey-App Api Documentation
+  version: "1.0.0"
+  title: "Survey-App"
+tags:
+  - name: "Auth"
+    description: "Users Authentication | Employees and Standard users"
+  - name: "Employee"
+    description: "Employee stuff"
+  - name: "Standard users"
+    description: "Standard users stuff"
+servers:
+  - description: Survey-App test server
+    url: http://192.168.1.100/api/
+paths:
+  /auth/login:
+    post:
+      description: login users (employee and standard)
+      tags:
+        - Auth
+      parameters:
+        - in: query
+          name: email
+          schema: 
+            type: string
+          required: true
+        - in: query
+          name: password
+          schema: 
+            type: string
+          required: true
+      responses:
+        200: 
+          description: Successfully logged in
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object 
+                    properties: 
+                      access_token:
+                        type: string
+                        example: XXXX-XXXXXXXX-XXXXXXXX-XXXXX
+                      token_type:
+                        type: string
+                        example: bearer
+                      expires_in:
+                        type: number
+                        example: 3600
+        401: 
+          description: Unauthorized
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid credentials
+                  data:
+                    type: object 
+                    properties: 
+                      credentials:
+                        type: object 
+                        properties: 
+                          email:
+                            type: string
+                            example: derex@mailinator.nt
+                          password:
+                            type: string
+                            example: 123hamadi
+                      error:
+                        type: string
+                        example: Unauthorized
+  /auth/register: 
+    post: 
+      description: standard user register
+      tags:
+      - Auth
+      parameters:
+      - in: query
+        name: name
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: email
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: password
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: phone_number
+        schema: 
+          type: string
+      responses:
+        200: 
+          description: Successfully registered
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully registered
+                  data:
+                    type: object 
+                    properties: 
+                      user:
+                        type: object 
+                        properties: 
+                          role:
+                            type: string
+                            example: standard
+                          name:
+                            type: string
+                            example: Meez
+                          email:
+                            type: string
+                            example: meez@main.net
+                          updated_at:
+                            type: string
+                            example: 2020-11-07T12:12:54.000000Z
+                          created_at:
+                            type: string
+                            example: 2020-11-07T12:12:54.000000Z
+                          id:
+                            type: number
+                            example: 8
+                      token:
+                        type: string
+                        example: XXXX-XXXXXXXX-XXXXXXXX-XXXXX
+        422: 
+          description: Invalid data
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: error
+                  data:
+                    type: object 
+                    properties: 
+                      name:
+                        type: array 
+                        items: 
+                          type: string 
+                          example: The name must be a string.
+                      email:
+                        type: array 
+                        items: 
+                          type: string
+                          example: The email has already been taken.
+  /auth/logout: 
+    post: 
+      description: logout the user (employee or standard user)
+      tags:
+      - Auth
+      responses:
+        200: 
+          description: Successfully logged out
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully logged out
+  /auth/refresh: 
+    post: 
+      description: Refresh the current token to get another one
+      tags:
+      - Auth
+      responses:
+        200: 
+          description: Successfully refreshed
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully refreshed
+                  data:
+                    type: object 
+                    properties: 
+                      access_token:
+                        type: string
+                        example: XXXX-XXXXXXXX-XXXXXXXX-XXXXX
+                      token_type:
+                        type: string
+                        example: bearer
+                      expires_in:
+                        type: number
+                        example: 3600
+  /auth/me: 
+    get: 
+      description: Get the user info (employee or standard user)
+      tags:
+      - Auth
+      responses:
+        200: 
+          description: Successfully loaded
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object 
+                    properties: 
+                      id:
+                        type: number
+                        example: 7
+                      name:
+                        type: string
+                        example: Draks Do
+                      email:
+                        type: string
+                        example: derex@mailinator.net
+                      email_verified_at:
+                        type: object
+                        example: null
+                      phone_number:
+                        type: object
+                        example: null
+                      ip:
+                        type: object
+                        example: null
+                      role:
+                        type: string
+                        example: standard
+                      created_at:
+                        type: string
+                        example: 2020-11-07T10:17:11.000000Z
+                      updated_at:
+                        type: string
+                        example: 2020-11-07T10:20:06.000000Z
+  /employee/get-my-surveys: 
+    get: 
+      description: Get employee surveys
+      tags:
+      - Employee
+      responses:
+        200: 
+          description: Successfully loaded
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully loaded
+                  data:
+                    type: array 
+                    items: 
+                      type: object 
+                      properties: 
+                        id:
+                          type: number
+                        survey_id:
+                          type: number
+                        user_id:
+                          type: number
+                        target:
+                          type: number
+                        due_date:
+                          type: string
+                        sub_target:
+                          type: number
+                        sub_target_type:
+                          type: string
+                        notes:
+                          type: string
+                        created_at:
+                          type: string
+                        updated_at:
+                          type: string
+                    example:
+                      - id: 1
+                        survey_id: 1
+                        user_id: 2
+                        target: 83
+                        due_date: "2020-11-06 00:00:00"
+                        sub_target: 49
+                        sub_target_type: week
+                        notes: Ab excepteur officia
+                        created_at: "2020-11-06T19:03:46.000000Z"
+                        updated_at: "2020-11-06T19:03:46.000000Z"
+                      - id: 3
+                        survey_id: 3
+                        user_id: 2
+                        target: 5
+                        due_date: "2020-11-11 00:00:00"
+                        sub_target: null
+                        sub_target_type: null
+                        notes: null
+                        created_at: "2020-11-09T09:07:07.000000Z"
+                        updated_at: "2020-11-09T09:07:07.000000Z"
+        403: 
+          description: You don't have the permission to use this survey
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Access denied, this survey is not available for you
+                  data:
+                    type: object 
+                    properties: 
+                      error:
+                        type: string
+                        example: Forbidden
+  /employee/start-survey/{id}: 
+    get: 
+      description: Start survey for employee
+      tags:
+      - Employee
+      parameters:
+      - in: path
+        name: id
+        description: id of the survey
+        schema: 
+          type: number
+        required: true
+      responses:
+        200: 
+          description: Survey successfully loaded
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object 
+                    properties: 
+                      id:
+                        type: number
+                      uuid:
+                        type: string
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      type:
+                        type: string
+                      publish_date:
+                        type: string
+                      due_date:
+                        type: string
+                      created_at:
+                        type: string
+                      updated_at:
+                        type: string
+                      questions:
+                        type: array 
+                        items:  
+                          type: object 
+                          properties: 
+                            id:
+                              type: number
+                            survey_id:
+                              type: number
+                            title:
+                              type: string
+                            type:
+                              type: string
+                            required:
+                              type: number
+                            has_other:
+                              type: number
+                            dependent_question_id:
+                              type: object
+                            dependent_answer_id:
+                              type: object
+                            created_at:
+                              type: string
+                            updated_at:
+                              type: string
+                            answers:
+                              type: array 
+                              items: 
+                                type: object 
+                            children:
+                              type: array 
+                              items: 
+                                type: object 
+                    example:
+                      - id: 1
+                        uuid: 04d5b4af-62a7-475e-955d-5cf2ddf0c398
+                        title: Sapiente veniam hic
+                        description: Omnis sequi aperiam exercitationem pariatur. Odio .
+                        type: private
+                        publish_date: 2020-11-06 00:00:00
+                        due_date: 2021-11-06 00:00:00
+                        created_at: 2020-11-06T19:02:00.000000Z
+                        updated_at: 2020-11-06T19:02:00.000000Z
+                        questions: [
+                            {
+                                "id": 1,
+                                "survey_id": 1,
+                                "title": "Tell us your opinion",
+                                "type": "longtext",
+                                "required": 0,
+                                "has_other": 0,
+                                "dependent_question_id": null,
+                                "dependent_answer_id": null,
+                                "created_at": "2020-11-06T19:02:22.000000Z",
+                                "updated_at": "2020-11-06T19:02:22.000000Z",
+                                "answers": [],
+                                "children": []
+                            },
+                            {
+                                "id": 2,
+                                "survey_id": 1,
+                                "title": "Its raining?",
+                                "type": "radio",
+                                "required": 1,
+                                "has_other": 0,
+                                "dependent_question_id": null,
+                                "dependent_answer_id": null,
+                                "created_at": "2020-11-07T10:50:31.000000Z",
+                                "updated_at": "2020-11-07T10:50:31.000000Z",
+                                "answers": [
+                                    {
+                                        "id": 1,
+                                        "question_id": 2,
+                                        "body": "yes",
+                                        "ordering": 100,
+                                        "created_at": "2020-11-07T10:50:31.000000Z",
+                                        "updated_at": "2020-11-07T10:50:31.000000Z"
+                                    },
+                                    {
+                                        "id": 2,
+                                        "question_id": 2,
+                                        "body": "no",
+                                        "ordering": 100,
+                                        "created_at": "2020-11-07T10:50:31.000000Z",
+                                        "updated_at": "2020-11-07T10:50:31.000000Z"
+                                    }
+                                ],
+                                "children": [
+                                    {
+                                        "id": 3,
+                                        "survey_id": 1,
+                                        "title": "When its start raining ?",
+                                        "type": "time",
+                                        "required": 1,
+                                        "has_other": 0,
+                                        "dependent_question_id": 2,
+                                        "dependent_answer_id": 1,
+                                        "created_at": "2020-11-07T10:52:13.000000Z",
+                                        "updated_at": "2020-11-07T10:52:13.000000Z",
+                                        "answers": [],
+                                        "children": []
+                                    }
+                                ]
+                            }
+                        ]
+        403: 
+          description: You don't have the permission to use this survey
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Access denied, this survey is not available for you
+                  data:
+                    type: object 
+                    properties: 
+                      error:
+                        type: string
+                        example: Forbidden
+  /employee/submit-survey/{id}: 
+    post: 
+      description: Submit the survey by sending the answered questions
+      tags:
+      - Employee
+      parameters:
+      - in: path
+        name: id
+        description: id of the submitted survey
+        schema: 
+          type: number
+        required: true
+      - in: query
+        name: answered_questions
+        description: the submitted answered questions
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object 
+              properties: 
+                answered_questions:
+                  type: array 
+                  items: 
+                    type: object 
+                    properties: 
+                      question_id:
+                        type: number
+                      value:
+                        type: string
+                  example:
+                    - question_id: 1
+                      value: Hello world
+                    - question_id: 2
+                      value: 70
+                    - question_id: 3
+                      value: ["hey", "may", "say"]
+      responses:
+        200: 
+          description: The answers were successfully submitted
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully submitted
+        403: 
+          description: You don't have the permission to use this survey
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Access denied, this survey is not available for you
+                  data:
+                    type: object 
+                    properties: 
+                      error:
+                        type: string
+                        example: Forbidden  
+  /standard/get-available-surveys: 
+    get: 
+      description: get the available surveys for this user
+      tags:
+      - Standard users
+      responses:
+        200: 
+          description: returns the surveys
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully loaded
+                  data:
+                    type: array 
+                    items: 
+                      type: object 
+                      properties: 
+                        id:
+                          type: number
+                          example: 2
+                        uuid:
+                          type: string
+                          example: 4fa7a7e9-0c58-4f45-a217-b250087af8ce
+                        title:
+                          type: string
+                          example: Rerum qui sunt et qu
+                        description:
+                          type: string
+                          example: Atque dolore ad rem debitis fuga. Cupiditate ut sa.
+                        type:
+                          type: string
+                          example: public
+                        publish_date:
+                          type: string
+                          example: 2020-11-07 00:00:00
+                        due_date:
+                          type: string
+                          example: 2020-12-07 00:00:00
+                        created_at:
+                          type: string
+                          example: 2020-11-07T15:41:16.000000Z
+                        updated_at:
+                          type: string
+                          example: 2020-11-07T15:41:16.000000Z
+  /standard/start-survey/{id}: 
+    get: 
+      description: Get the survey with its questions
+      tags:
+      - Standard users
+      parameters:
+      - in: path
+        name: id
+        description: the id of the survey
+        schema: 
+          type: number
+        required: true
+      responses:
+        200: 
+          description: returns the survey with its questions to start answering
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object 
+                    properties: 
+                      id:
+                        type: number
+                        example: 2
+                      uuid:
+                        type: string
+                        example: 4fa7a7e9-0c58-4f45-a217-b250087af8ce
+                      title:
+                        type: string
+                        example: Rerum qui sunt et qu
+                      description:
+                        type: string
+                        example: Atque dolore ad rem debitis fuga. Cupiditate ut sa.
+                      type:
+                        type: string
+                        example: public
+                      publish_date:
+                        type: string
+                        example: 2020-11-07 00:00:00
+                      due_date:
+                        type: string
+                        example: 2020-12-07 00:00:00
+                      created_at:
+                        type: string
+                        example: 2020-11-07T15:41:16.000000Z
+                      updated_at:
+                        type: string
+                        example: 2020-11-07T15:41:16.000000Z
+                      questions:
+                        type: array 
+                        items: 
+                          type: object 
+                          example: {} 
+        403: 
+          description: You don't have the permission to use this survey
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Access denied, this survey is not available for you
+                  data:
+                    type: object 
+                    properties: 
+                      error:
+                        type: string
+                        example: Forbidden
+  /standard/submit-survey/{id}: 
+    post: 
+      description: Submit the survey by sending the answered questions
+      tags:
+      - Standard users
+      parameters:
+      - in: path
+        name: id
+        description: id of the submitted survey
+        schema: 
+          type: number
+        required: true
+      - in: query
+        name: answered_questions
+        description: the submitted answered questions
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object 
+              properties: 
+                answered_questions:
+                  type: array 
+                  items: 
+                    type: object 
+                    properties: 
+                      question_id:
+                        type: number
+                      value:
+                        type: string
+                  example:
+                    - question_id: 1
+                      value: Hello world
+                    - question_id: 2
+                      value: 70
+                    - question_id: 3
+                      value: ["hey", "may", "say"]
+      responses:
+        200: 
+          description: The answers were successfully submitted
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully submitted
+        403: 
+          description: You don't have the permission to use this survey
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Access denied, this survey is not available for you
+                  data:
+                    type: object 
+                    properties: 
+                      error:
+                        type: string
+                        example: Forbidden
+  /standard/show-profile: 
+    get: 
+      description: show user profile
+      tags:
+      - Standard users
+      responses:
+        200: 
+          description: returns the user's info and his profile, the profile may be null if the user does not complete his profile yet
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object 
+                    properties: 
+                      id:
+                        type: number
+                        example: 8
+                      name:
+                        type: string
+                        example: Meez
+                      email:
+                        type: string
+                        example: meez@main.net
+                      email_verified_at:
+                        type: object
+                        example: null
+                      phone_number:
+                        type: object
+                        example: null
+                      ip:
+                        type: object
+                        example: null
+                      role:
+                        type: string
+                        example: standard
+                      created_at:
+                        type: string
+                        example: 2020-11-07T12:12:54.000000Z
+                      updated_at:
+                        type: string
+                        example: 2020-11-07T12:36:34.000000Z
+                      profile:
+                        type: object 
+                        properties: 
+                          id:
+                            type: number
+                            example: 1
+                          gender:
+                            type: string
+                            example: male
+                          age:
+                            type: number
+                            example: 19
+                          birth_date:
+                            type: string
+                            example: 2020-12-10 00:00:00
+                          address:
+                            type: string
+                            example: afif
+                          nationality:
+                            type: string
+                            example: syria
+                          marital_status:
+                            type: string
+                            example: married
+                          user_id:
+                            type: number
+                            example: 8
+                          additional_info:
+                            type: object
+                            example: null
+                          created_at:
+                            type: string
+                            example: 2020-11-08T12:42:30.000000Z
+                          updated_at:
+                            type: string
+                            example: 2020-11-08T12:42:30.000000Z
+  /standard/update-profile: 
+    put: 
+      description: update profile of the current user
+      tags:
+      - Standard users
+      parameters:
+      - in: query
+        name: gender
+        description: options (male, female)
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: age
+        description: e.g. 22
+        schema: 
+          type: number
+        required: true
+      - in: query
+        name: birth_date
+        description: it must be in format Y-m-d H:i:s e.g. 2000-10-10 00:00:00
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: address
+        description: the format like street, region, country e.g. afif street, muajreen, damascus
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: nationality
+        description: choose from enum (Syria, etc...), this enum will be provided
+        schema: 
+          type: string
+        required: true
+      - in: query
+        name: marital_status
+        description: options (single, married)
+        schema: 
+          type: string
+        required: true
+      responses:
+        200: 
+          description: returns the user with his updated profile
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Successfully updated
+                  data:
+                    type: object 
+                    properties: 
+                      id:
+                        type: number
+                        example: 5
+                      name:
+                        type: string
+                        example: Ralph Carr
+                      email:
+                        type: string
+                        example: rysecili@mailinator.com
+                      email_verified_at:
+                        type: object
+                        example: null
+                      phone_number:
+                        type: object
+                        example: null
+                      ip:
+                        type: object
+                        example: null
+                      role:
+                        type: string
+                        example: standard
+                      created_at:
+                        type: string
+                        example: 2020-11-07T09:03:20.000000Z
+                      updated_at:
+                        type: string
+                        example: 2020-11-07T09:03:20.000000Z
+                      profile:
+                        type: object 
+                        properties: 
+                          id:
+                            type: number
+                            example: 2
+                          gender:
+                            type: string
+                            example: male
+                          age:
+                            type: number
+                            example: 22
+                          birth_date:
+                            type: string
+                            example: 2000-12-10 00:00:00
+                          address:
+                            type: string
+                            example: afif
+                          nationality:
+                            type: string
+                            example: syria
+                          marital_status:
+                            type: string
+                            example: single
+                          user_id:
+                            type: number
+                            example: 5
+                          additional_info:
+                            type: object
+                            example: null
+                          created_at:
+                            type: string
+                            example: 2020-11-09T11:47:18.000000Z
+                          updated_at:
+                            type: string
+                            example: 2020-11-09T11:47:18.000000Z
+                    
