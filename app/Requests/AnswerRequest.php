@@ -2,7 +2,6 @@
 
 namespace App\Requests;
 
-use App\Rules\AnswerType;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AnswerRequest extends FormRequest
@@ -26,7 +25,7 @@ class AnswerRequest extends FormRequest
     {
         return [
             'body' => 'required',
-            'type' => ['required', new AnswerType],
+            'type' => ['required'],
             'question_id' => 'required|exists:questions,id'
         ];
     }

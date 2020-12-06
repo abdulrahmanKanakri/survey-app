@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\MediaTypes;
 use App\Enums\TimeUnits;
 use App\Models\Question;
 use App\Models\Survey;
@@ -92,6 +93,14 @@ class CreateAppTable extends Migration
             $table->foreignId('question_id');
             $table->text('response');
         });
+        
+        Schema::create('media', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('ext');
+            $table->string('path');
+            $table->enum('type', MediaTypes::getConstants());
+        });
 
         $this->handleViews();
         $this->relations();
@@ -114,6 +123,7 @@ class CreateAppTable extends Migration
         Schema::dropIfExists('user_answers');
         Schema::dropIfExists('survey_employees');
         Schema::dropIfExists('submissions');
+        Schema::dropIfExists('media');
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
@@ -145,18 +155,18 @@ class CreateAppTable extends Migration
     
     private function handleViews() {
         DB::statement('DROP VIEW IF EXISTS responses_view');
-        // DB::statement(
-        //     'CREATE VIEW responses_view AS
-        //     SELECT s_u.survey_id, s.title survey_title, s_u.user_id, 
-        //     u.name username, u.ip user_ip_address,
-        //     u_a.question_id, q.title question_title, u_a.response,
-        //     q.dependent_question_id, q.dependent_answer_id
-        //     FROM user_answers u_a
-        //     INNER JOIN survey_user as s_u ON survey_user_id = s_u.id
-        //     INNER JOIN surveys as s ON s_u.survey_id = s.id
-        //     INNER JOIN users as u ON s_u.user_id = u.id
-        //     INNER JOIN questions as q ON u_a.question_id = q.id'
-        // );
+        DB::statement(
+            'CREATE VIEW responses_view AS
+            SELECT s_u.survey_id, s.title survey_title, s_u.user_id, 
+            u.name username, u.ip user_ip_address,
+            u_a.question_id, q.title question_title, u_a.response,
+            q.dependent_question_id, q.dependent_answer_id
+            FROM user_answers u_a
+            INNER JOIN survey_user as s_u ON u_a.model_id = s_u.id
+            INNER JOIN surveys as s ON s_u.survey_id = s.id
+            INNER JOIN users as u ON s_u.user_id = u.id
+            INNER JOIN questions as q ON u_a.question_id = q.id'
+        );
     }
 
     private function dropViews() {

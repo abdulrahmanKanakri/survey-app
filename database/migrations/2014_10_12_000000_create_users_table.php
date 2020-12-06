@@ -32,7 +32,6 @@ class CreateUsersTable extends Migration
             $table->string('phone_number')->nullable();
             $table->ipAddress('ip')->nullable();
             $table->enum('role', User::ROLES);
-            $table->foreignId('group_id')->nullable()->references('id')->on('groups')->onDelete('set null');
             $table->rememberToken();
             $table->timestamps();
         });

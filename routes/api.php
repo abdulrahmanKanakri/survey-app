@@ -41,8 +41,18 @@ Route::group([
     'prefix' => 'standard'
 ], function () {
     Route::get('get-available-surveys', 'StandardController@getAvailableSurveys');
+    Route::get('get-my-surveys', 'StandardController@getMySurveys');
     Route::get('start-survey/{id}', 'StandardController@startSurvey');
     Route::post('submit-survey/{id}', 'StandardController@submitSurvey');
     Route::put('update-profile', 'StandardController@updateProfile');
     Route::get('show-profile', 'StandardController@showProfile');
+});
+
+Route::group([
+    'namespace' => 'Api',
+    'middleware' => ['auth:api'],
+    'prefix' => 'media',
+], function () {
+    Route::post('store-file', 'MediaController@storeFile');
+    Route::post('store-multiple-files', 'MediaController@storeMultipleFiles');
 });

@@ -10,6 +10,7 @@ use App\Models\SurveyUser;
 use App\Models\User\Profile;
 use App\Models\User\User;
 use App\Models\UserAnswers;
+use App\Requests\ProfileRequest;
 
 class StandardController extends Controller
 {
@@ -25,7 +26,7 @@ class StandardController extends Controller
         return ApiResponse::success($this->user->load('profile'));
     }
 
-    public function updateProfile(Request $request)
+    public function updateProfile(ProfileRequest $request)
     {
         $profile = Profile::updateOrCreate(
             ['user_id' => $this->user->id],
@@ -50,6 +51,19 @@ class StandardController extends Controller
         return ApiResponse::success($surveys, 'Successfully loaded');
     }
 
+    public function getMySurveys()
+    {
+        $completedSurveys = SurveyUser::select('survey_id')
+            ->where('user_id', $this->user->id)
+            ->get();
+        $surveys = Survey::public()->whereNotIn('id', $completedSurveys)->get();
+        $completedSurveys = Survey::public()->whereIn('id', $completedSurveys)->get();
+        return ApiResponse::success([
+            'available' => $surveys,
+            'completed' => $completedSurveys
+        ], 'Successfully loaded');
+    }
+
     public function startSurvey(Request $request, $id)
     {
         $survey = Survey::public()->with('questions.answers')->find($id);
@@ -65,6 +79,8 @@ class StandardController extends Controller
 
     public function submitSurvey(Request $request, $id)
     {
+        // TODO: check if the required questions get answered
+
         // return ApiResponse::success($request->all());
         $survey = Survey::public()->find($id);
         if($survey == null) {
@@ -96,21 +112,5 @@ class StandardController extends Controller
         }
         
         return ApiResponse::success(null, 'Successfully submitted');
-
-        // // data may be like:
-        // "answered_questions": [
-        //     {
-        //         "question_id": 1,
-        //         "value": "Hello world"
-        //     },
-        //     {
-        //         "question_id": 2,
-        //         "value": 70
-        //     },
-        //     {
-        //         "question_id": 3,
-        //         "value": ["hey", "may", "say"]
-        //     },
-        // ]
     }
 }

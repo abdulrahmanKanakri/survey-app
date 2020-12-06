@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   description: Survey-App Api Documentation
-  version: "1.0.0"
+  version: "1.1"
   title: "Survey-App"
 tags:
   - name: "Auth"
@@ -10,9 +10,11 @@ tags:
     description: "Employee stuff"
   - name: "Standard users"
     description: "Standard users stuff"
+  - name: "Media"
+    description: "Media stuff"
 servers:
   - description: Survey-App test server
-    url: http://192.168.1.100/api/
+    url: http://192.168.1.2/survey-app/public/api/
 paths:
   /auth/login:
     post:
@@ -166,16 +168,35 @@ paths:
                   data:
                     type: object 
                     properties: 
-                      name:
-                        type: array 
-                        items: 
-                          type: string 
-                          example: The name must be a string.
-                      email:
-                        type: array 
-                        items: 
-                          type: string
-                          example: The email has already been taken.
+                      errors:
+                        type: object 
+                        properties: 
+                          name:
+                            type: array 
+                            items: 
+                              type: string
+                              example: The name field is required.
+                          email:
+                            type: array 
+                            items: 
+                              type: string
+                              example: The email has already been taken.
+                      user:
+                        type: object 
+                        properties: 
+                          name:
+                            type: object
+                            example: null
+                          password:
+                            type: string
+                            example: 123hamadi
+                          email:
+                            type: string
+                            example: hero@test.com
+                          phone_number:
+                            type: string
+                            example: 0988776655
+
   /auth/logout: 
     post: 
       description: logout the user (employee or standard user)
@@ -600,9 +621,9 @@ paths:
                       error:
                         type: string
                         example: Forbidden  
-  /standard/get-available-surveys: 
+  /standard/get-my-surveys: 
     get: 
-      description: get the available surveys for this user
+      description: get the surveys for this user (available and completed)
       tags:
       - Standard users
       responses:
@@ -620,37 +641,73 @@ paths:
                     type: string
                     example: Successfully loaded
                   data:
-                    type: array 
-                    items: 
-                      type: object 
-                      properties: 
-                        id:
-                          type: number
-                          example: 2
-                        uuid:
-                          type: string
-                          example: 4fa7a7e9-0c58-4f45-a217-b250087af8ce
-                        title:
-                          type: string
-                          example: Rerum qui sunt et qu
-                        description:
-                          type: string
-                          example: Atque dolore ad rem debitis fuga. Cupiditate ut sa.
-                        type:
-                          type: string
-                          example: public
-                        publish_date:
-                          type: string
-                          example: 2020-11-07 00:00:00
-                        due_date:
-                          type: string
-                          example: 2020-12-07 00:00:00
-                        created_at:
-                          type: string
-                          example: 2020-11-07T15:41:16.000000Z
-                        updated_at:
-                          type: string
-                          example: 2020-11-07T15:41:16.000000Z
+                    type: object 
+                    properties: 
+                      available:
+                        type: array 
+                        items: 
+                          type: object 
+                          properties: 
+                            id:
+                              type: number
+                              example: 3
+                            uuid:
+                              type: string
+                              example: 3e74af58-57fb-4e6f-bb96-dc9bbe80b8cd
+                            title:
+                              type: string
+                              example: Laborum fugiat culpa
+                            description:
+                              type: string
+                              example: Quidem doloribus velit corrupti, ex magni veritati.
+                            type:
+                              type: string
+                              example: public
+                            publish_date:
+                              type: string
+                              example: 2020-11-22 00:00:00
+                            due_date:
+                              type: string
+                              example: 2020-12-22 00:00:00
+                            created_at:
+                              type: string
+                              example: 2020-11-22T13:51:26.000000Z
+                            updated_at:
+                              type: string
+                              example: 2020-11-22T13:51:26.000000Z
+                      completed:
+                        type: array 
+                        items:
+                          type: object 
+                          properties: 
+                            id:
+                              type: number
+                              example: 2
+                            uuid:
+                              type: string
+                              example: c7644ce8-c1f2-452d-8236-bfc5d48f3222
+                            title:
+                              type: string
+                              example: Tempor consectetur
+                            description:
+                              type: string
+                              example: Vel harum nostrud ex autem aperiam sed ad eiusmod .
+                            type:
+                              type: string
+                              example: public
+                            publish_date:
+                              type: string
+                              example: 2020-11-22 00:00:00
+                            due_date:
+                              type: string
+                              example: 2020-12-22 00:00:00
+                            created_at:
+                              type: string
+                              example: 2020-11-22T13:42:32.000000Z
+                            updated_at:
+                              type: string
+                              example: 2020-11-22T13:42:32.000000Z
+
   /standard/start-survey/{id}: 
     get: 
       description: Get the survey with its questions
@@ -1008,4 +1065,70 @@ paths:
                           updated_at:
                             type: string
                             example: 2020-11-09T11:47:18.000000Z
-                    
+  /media/store-file: 
+    post: 
+      description: store file in server
+      tags:
+      - Media
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                profileImage:
+                  type: string
+                  format: binary
+            encoding:
+              profileImage: # Property name
+                contentType: image/png, image/jpeg
+      # requestBody:
+      #   required: true
+      #   content:
+      #     image/png:
+      #       schema:
+      #         type: string
+      #         format: binary
+              
+      responses:
+        200: 
+          description: successfully stored
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: success
+                  data:
+                    type: object 
+                    properties: 
+                      file:
+                        type: string
+                        example: http://survey-app.test/storage/images/1606562553_A1ThXk3JsF.jpg
+        422: 
+          description: invalid type file
+          content: 
+            application/json: 
+              schema: 
+                type: object 
+                properties: 
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid file
+                  data:
+                    type: object 
+                    properties: 
+                      file:
+                        type: string
+                        example: testing value

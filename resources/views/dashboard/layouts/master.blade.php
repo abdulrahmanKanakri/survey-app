@@ -120,7 +120,15 @@
                     <a href="{{route('dashboard.response.index')}}" class="nav-link">
                         <i class="nav-icon fas fa-reply"></i>
                         <p class="text-capitalize">
-                            responses
+                            user responses
+                        </p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{route('dashboard.submission.index')}}" class="nav-link">
+                        <i class="nav-icon fas fa-check"></i>
+                        <p class="text-capitalize">
+                            employee submissions
                         </p>
                     </a>
                 </li>

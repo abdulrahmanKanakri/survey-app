@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User\Standard;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,7 +18,7 @@ class SurveyUser extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(Standard::class, 'user_id');
     }
 
     public function userAnswers()

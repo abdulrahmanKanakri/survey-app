@@ -22,7 +22,11 @@ class EmployeeController extends Controller
 
     public function getMySurveys()
     {
-        $surveys = $this->employee->surveys; // get the survey details
+        // return the submissions as number
+        $surveys = $this->employee->surveys()
+            ->with('survey')
+            ->withCount('submissions')
+            ->get();
         return ApiResponse::success($surveys, 'Successfully loaded');
     }
 

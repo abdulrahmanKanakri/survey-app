@@ -9,6 +9,7 @@ use App\Models\User\Employee;
 use App\Models\User\Standard;
 use App\Models\UserAnswers;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -75,6 +76,21 @@ Route::group([
     )->name('response.exportAllSurveys');
     Route::resource('response', 'ResponseController')->only(['index', 'show', 'destroy']);
 
+    // Submissions Stuff
+    Route::get(
+        'submission/exportSurveyByUser/{survey_id}/{user_id}', 
+        'SubmissionController@exportSurveyByUser'
+    )->name('submission.exportSurveyByUser');
+    Route::get(
+        'submission/exportSurvey/{survey_id}', 
+        'SubmissionController@exportSurvey'
+    )->name('submission.exportSurvey');
+    Route::get(
+        'submission/exportAllSurveys', 
+        'SubmissionController@exportAllSurveys'
+    )->name('submission.exportAllSurveys');
+    Route::resource('submission', 'SubmissionController')->only(['index', 'show', 'destroy']);
+
     // Ajax
     Route::group([
         'prefix' => 'ajax',
@@ -99,6 +115,5 @@ Route::group(['namespace' => 'Front'], function () {
 });
 
 Route::get('test', function () {
-    dd('quxaty@mailinator.com', '123hamadi');
     dd('done');
 });

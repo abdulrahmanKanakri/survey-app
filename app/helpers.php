@@ -1,9 +1,12 @@
 <?php
 
 use App\Classes\ApiResponse;
+use App\Models\Media;
 use App\Models\User\Employee;
 use App\Models\User\Standard;
 use App\Models\User\User;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 function searchInArray($array, $key, $value) {
     foreach($array as $arr) {
@@ -55,4 +58,26 @@ function employee() {
 
 function standard() {
     return castUserToStandard(auth('api')->user());
+}
+
+function storeFile(UploadedFile $file)
+{
+    $ext = $file->getClientOriginalExtension();
+    $name = time() . '_' . Str::random(10);
+    $type = $folder = '';
+    foreach(Media::EXTENSIONS as $key => $extension) {
+        if(in_array($ext, $extension)) {
+            $type = $key;
+            $folder = $type . 's';
+            break;
+        }
+    }
+    $path = $folder . '/' . $name . '.' . $ext;
+    Storage::disk('public')->put($path, file_get_contents($file));
+    return [
+        'name' => $name,
+        'ext' => $ext,
+        'path' => $path,
+        'type' => $type,
+    ];
 }

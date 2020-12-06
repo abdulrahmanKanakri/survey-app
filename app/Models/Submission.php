@@ -19,4 +19,9 @@ class Submission extends Model
     {
         return $this->morphMany(UserAnswers::class, 'model');
     }
+
+    public function scopeWithAll(Builder $builder)
+    {
+        return $builder->with(['surveyEmployee', 'userAnswers']);
+    }
 }

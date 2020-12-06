@@ -16,7 +16,7 @@ class SurveyService
         $group_user = DB::table('group_user')
             ->select('user_id')
             ->distinct()
-            ->whereIn('group_id', $data['groups'])
+            ->whereIn('group_id', $data['groups'] ?? [])
             ->pluck('user_id')
             ->merge($data['employees'] ?? [])
             ->toArray();
